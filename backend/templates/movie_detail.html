@@ -112,13 +112,14 @@
                             <div class="form-group">
                                 <label class="form-label">评分</label>
                                 <div class="stars" style="display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px;">
-                                    <input type="radio" id="star5" name="rating" value="5" hidden required><label for="star5" style="font-size: 24px; cursor: pointer; color: var(--text-tertiary); transition: color 0.2s;">★</label>
-                                    <input type="radio" id="star4" name="rating" value="4" hidden required><label for="star4" style="font-size: 24px; cursor: pointer; color: var(--text-tertiary); transition: color 0.2s;">★</label>
-                                    <input type="radio" id="star3" name="rating" value="3" hidden required><label for="star3" style="font-size: 24px; cursor: pointer; color: var(--text-tertiary); transition: color 0.2s;">★</label>
-                                    <input type="radio" id="star2" name="rating" value="2" hidden required><label for="star2" style="font-size: 24px; cursor: pointer; color: var(--text-tertiary); transition: color 0.2s;">★</label>
-                                    <input type="radio" id="star1" name="rating" value="1" hidden required><label for="star1" style="font-size: 24px; cursor: pointer; color: var(--text-tertiary); transition: color 0.2s;">★</label>
+                                    <input type="radio" id="star5" name="rating" value="5" hidden required><label for="star5" style="font-size: 24px; cursor: pointer; transition: color 0.2s;">★</label>
+                                    <input type="radio" id="star4" name="rating" value="4" hidden required><label for="star4" style="font-size: 24px; cursor: pointer; transition: color 0.2s;">★</label>
+                                    <input type="radio" id="star3" name="rating" value="3" hidden required><label for="star3" style="font-size: 24px; cursor: pointer; transition: color 0.2s;">★</label>
+                                    <input type="radio" id="star2" name="rating" value="2" hidden required><label for="star2" style="font-size: 24px; cursor: pointer; transition: color 0.2s;">★</label>
+                                    <input type="radio" id="star1" name="rating" value="1" hidden required><label for="star1" style="font-size: 24px; cursor: pointer; transition: color 0.2s;">★</label>
                                 </div>
                                 <style>
+                                    .stars label { color: var(--text-tertiary); }
                                     .stars input:checked ~ label,
                                     .stars label:hover,
                                     .stars label:hover ~ label { color: var(--warning); }
