@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+
+{% block title %}首页 - Lumina Cinema{% endblock %}
+
+{% block content %}
+    <!-- Hero Section -->
+    {% if movies %}
+    {% set hero_movie = movies[0] %}
+    <section class="hero animate-fade-in">
+        <img src="{{ hero_movie.poster }}" alt="{{ hero_movie.title }}" class="hero-bg">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <div class="hero-meta">
+                <span class="tag">正在热映</span>
+                <span class="tag"><i class="fas fa-star text-warning"></i> {{ hero_movie.rating }}</span>
+                <span>{{ hero_movie.duration }} 分钟</span>
+            </div>
+            <h1 class="hero-title">{{ hero_movie.title }}</h1>
+            <p style="color: var(--text-secondary); margin-bottom: 32px; font-size: 1.1rem; max-width: 600px; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                {{ hero_movie.description if hero_movie.description else '精彩剧情，不容错过。立即预订，享受极致视听盛宴。' }}
+            </p>
+            <div class="d-flex gap-2">
+                <a href="{{ url_for('movie_detail', movie_id=hero_movie.movie_id) }}" class="btn btn-primary btn-lg">
+                    <i class="fas fa-ticket-alt" style="margin-right: 8px;"></i> 立即购票
+                </a>
+                <a href="{{ url_for('movie_detail', movie_id=hero_movie.movie_id) }}" class="btn btn-secondary btn-lg">
+                    <i class="fas fa-info-circle" style="margin-right: 8px;"></i> 了解更多
+                </a>
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <!-- Movies Grid -->
+    <section class="mb-8">
+        <div class="d-flex justify-between items-center mb-8">
+            <h2>正在热映</h2>
+            <a href="{{ url_for('movie_list') }}" class="btn btn-ghost">查看全部 <i class="fas fa-arrow-right" style="margin-left: 4px;"></i></a>
+        </div>
+
+        <div class="grid-container delay-100 animate-fade-in">
+            {% for movie in movies[1:] %}
+            <a href="{{ url_for('movie_detail', movie_id=movie.movie_id) }}" class="movie-card">
+                <div class="movie-poster-wrapper">
+                    <img src="{{ movie.poster }}" alt="{{ movie.title }}" class="movie-poster" loading="lazy">
+                    <div class="movie-rating-badge">
+                        <i class="fas fa-star"></i> {{ movie.rating }}
+                    </div>
+                </div>
+                <div class="movie-card-content">
+                    <h3 class="movie-title">{{ movie.title }}</h3>
+                    <div class="movie-info">
+                        <span>{{ movie.genre if movie.genre else '剧情' }}</span>
+                        <span style="margin: 0 8px;">•</span>
+                        <span>{{ movie.duration }} 分钟</span>
+                    </div>
+                    <button class="btn btn-secondary btn-sm" style="width: 100%; margin-top: auto;">
+                        选座购票
+                    </button>
+                </div>
+            </a>
+            {% endfor %}
+        </div>
+    </section>
+{% endblock %}

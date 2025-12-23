@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}订单详情 - Lumina Cinema{% endblock %}
+
+{% block content %}
+    <div class="animate-fade-in" style="max-width: 800px; margin: 0 auto;">
+        <div class="d-flex justify-between items-center mb-8">
+            <h1 style="font-size: 2rem;">订单详情</h1>
+            <a href="{{ url_for('user_profile') }}" class="btn btn-ghost">
+                <i class="fas fa-arrow-left" style="margin-right: 8px;"></i> 返回列表
+            </a>
+        </div>
+        
+        <div class="card" style="padding: 0; overflow: hidden;">
+            <!-- Header -->
+            <div style="padding: 24px; background: var(--bg-surface-hover); border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+                <div>
+                    <div style="color: var(--text-secondary); font-size: 0.9rem;">订单号</div>
+                    <div style="font-family: monospace; font-size: 1.1rem; font-weight: 600;">#{{ order.order_id }}</div>
+                </div>
+                <div>
+                    {% if order.status == 'pending' %}
+                        <span class="tag" style="background: rgba(245, 158, 11, 0.1); color: var(--warning); border-color: rgba(245, 158, 11, 0.3);">待支付</span>
+                    {% elif order.status == 'paid' %}
+                        <span class="tag" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border-color: rgba(16, 185, 129, 0.3);">已支付</span>
+                    {% elif order.status == 'cancelled' %}
+                        <span class="tag" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border-color: rgba(239, 68, 68, 0.3);">已取消</span>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Body -->
+            <div style="padding: 24px;">
+                <!-- Movie Info -->
+                <div style="display: flex; gap: 24px; margin-bottom: 32px; flex-wrap: wrap;">
+                    <img src="{{ movie.poster if movie.poster else 'https://placehold.co/200x300?text=Movie+Poster' }}" alt="{{ movie.title }}" style="width: 120px; border-radius: var(--radius-sm); box-shadow: var(--shadow-md);">
+                    <div style="flex: 1; min-width: 200px;">
+                        <h2 style="font-size: 1.5rem; margin-bottom: 8px;">{{ movie.title }}</h2>
+                        <div style="color: var(--text-secondary); margin-bottom: 16px;">
+                            <span>{{ movie.genre }}</span> <span style="margin: 0 8px;">•</span> <span>{{ movie.duration }}分钟</span>
+                        </div>
+                        
+                        <div style="display: grid; gap: 12px; color: var(--text-primary);">
+                            <div style="display: flex; gap: 12px;">
+                                <i class="far fa-clock" style="color: var(--text-secondary); width: 20px;"></i>
+                                <span>{{ screening.start_time.strftime('%Y-%m-%d %H:%M') }}</span>
+                            </div>
+                            <div style="display: flex; gap: 12px;">
+                                <i class="fas fa-map-marker-alt" style="color: var(--text-secondary); width: 20px;"></i>
+                                <span>{{ cinema.name }} - {{ hall.name }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 32px; border-top: 1px solid var(--border-color); padding-top: 24px;">
+                    <!-- Seats -->
+                    <div>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 16px; color: var(--text-secondary);">座位信息</h3>
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                            {% for seat in seats %}
+                                <span class="tag">{{ seat.seat_row }}排{{ seat.seat_col }}座</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    
+                    <!-- Payment -->
+                    <div>
+                        <h3 style="font-size: 1.1rem; margin-bottom: 16px; color: var(--text-secondary);">支付详情</h3>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <div class="d-flex justify-between">
+                                <span style="color: var(--text-secondary);">单价</span>
+                                <span>¥{{ screening.price }}</span>
+                            </div>
+                            <div class="d-flex justify-between">
+                                <span style="color: var(--text-secondary);">数量</span>
+                                <span>{{ seats|length }}张</span>
+                            </div>
+                            <div class="d-flex justify-between" style="border-top: 1px solid var(--border-color); margin-top: 8px; padding-top: 8px; font-weight: 700; font-size: 1.2rem;">
+                                <span>总计</span>
+                                <span style="color: var(--primary-color);">¥{{ order.total_price }}</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Footer Actions -->
+            <div style="padding: 24px; background: var(--bg-surface-hover); border-top: 1px solid var(--border-color); display: flex; justify-content: flex-end; gap: 12px;">
+                {% if order.status == 'pending' %}
+                    <form action="{{ url_for('cancel_order', order_id=order.order_id) }}" method="POST" onsubmit="return confirm('确定要取消此订单吗？');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-secondary">取消订单</button>
+                    </form>
+                    <form action="{{ url_for('pay_order', order_id=order.order_id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary">立即支付</button>
+                    </form>
+                {% elif order.status == 'paid' %}
+                    <button class="btn btn-secondary" disabled>已完成</button>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+{% endblock %}

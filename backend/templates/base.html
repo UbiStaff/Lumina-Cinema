@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Lumina Cinema - 电影票选座与影评系统{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    {% block head %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav>
+        <div class="container nav-container">
+            <a href="{{ url_for('home') }}" class="logo">
+                <i class="fas fa-film" style="margin-right: 8px;"></i>Lumina
+            </a>
+            
+            <ul class="nav-menu">
+                <li><a href="{{ url_for('home') }}" class="nav-link {% if request.endpoint == 'home' %}active{% endif %}">首页</a></li>
+                <li><a href="{{ url_for('movie_list') }}" class="nav-link {% if request.endpoint == 'movie_list' %}active{% endif %}">电影</a></li>
+                <li><a href="#" class="nav-link">影院</a></li>
+                <li><a href="#" class="nav-link">活动</a></li>
+            </ul>
+
+            <div class="nav-auth">
+                {% if current_user.is_authenticated %}
+                    <a href="{{ url_for('user_profile') }}" class="nav-link">
+                        <i class="fas fa-user-circle" style="margin-right: 6px;"></i>我的
+                    </a>
+                    <a href="{{ url_for('logout') }}" class="btn btn-sm btn-secondary">退出</a>
+                {% else %}
+                    <a href="{{ url_for('login') }}" class="btn btn-sm btn-ghost">登录</a>
+                    <a href="{{ url_for('register') }}" class="btn btn-sm btn-primary">注册</a>
+                {% endif %}
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main>
+        <div class="container animate-fade-in">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+                {% if messages %}
+                    <div class="messages mb-8">
+                        {% for category, message in messages %}
+                            <div class="card" style="padding: 16px; border-left: 4px solid var(--{{ category if category != 'message' else 'info' }}); background: rgba(255,255,255,0.05);">
+                                {{ message }}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+            {% endwith %}
+            
+            {% block content %}{% endblock %}
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <div class="footer-grid">
+                <div class="footer-brand">
+                    <h3>Lumina Cinema</h3>
+                    <p style="color: var(--text-secondary); margin-bottom: 24px;">
+                        重新定义您的观影体验。<br>
+                        沉浸式视听，尊享服务。
+                    </p>
+                    <div class="social-links" style="display: flex; gap: 16px;">
+                        <a href="#" class="text-secondary"><i class="fab fa-weixin fa-lg"></i></a>
+                        <a href="#" class="text-secondary"><i class="fab fa-weibo fa-lg"></i></a>
+                        <a href="#" class="text-secondary"><i class="fab fa-instagram fa-lg"></i></a>
+                    </div>
+                </div>
+                
+                <div class="footer-links">
+                    <h4 style="margin-bottom: 24px;">探索</h4>
+                    <ul>
+                        <li><a href="#">正在热映</a></li>
+                        <li><a href="#">即将上映</a></li>
+                        <li><a href="#">影院列表</a></li>
+                        <li><a href="#">特惠活动</a></li>
+                    </ul>
+                </div>
+                
+                <div class="footer-links">
+                    <h4 style="margin-bottom: 24px;">支持</h4>
+                    <ul>
+                        <li><a href="#">帮助中心</a></li>
+                        <li><a href="#">联系我们</a></li>
+                        <li><a href="#">隐私政策</a></li>
+                        <li><a href="#">服务条款</a></li>
+                    </ul>
+                </div>
+
+                <div class="footer-newsletter">
+                    <h4 style="margin-bottom: 24px;">订阅动态</h4>
+                    <div style="display: flex; gap: 8px;">
+                        <input type="email" placeholder="您的邮箱地址" class="form-input" style="border-radius: var(--radius-sm);">
+                        <button class="btn btn-primary" style="padding: 10px;"><i class="fas fa-arrow-right"></i></button>
+                    </div>
+                </div>
+            </div>
+            <div style="border-top: 1px solid var(--divider); padding-top: 32px; text-align: center; color: var(--text-tertiary); font-size: 0.9rem;">
+                &copy; 2024 Lumina Cinema. All rights reserved.
+            </div>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

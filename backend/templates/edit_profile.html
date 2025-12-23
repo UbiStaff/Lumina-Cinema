@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+
+{% block title %}编辑资料 - Lumina Cinema{% endblock %}
+
+{% block content %}
+    <div class="auth-wrapper animate-fade-in" style="min-height: auto; padding: 48px 0;">
+        <div class="auth-box" style="max-width: 500px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+                <h1 style="font-size: 2rem; margin-bottom: 8px;">编辑个人资料</h1>
+                <p style="color: var(--text-secondary);">更新您的账户信息</p>
+            </div>
+            
+            <form action="{{ url_for('edit_profile') }}" method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--primary-gradient); display: inline-flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: 700; color: white; margin-bottom: 16px; overflow: hidden;">
+                        {% if current_user.avatar %}
+                            <img src="{{ url_for('static', filename='images/' + current_user.avatar) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            {{ current_user.username[0] | upper }}
+                        {% endif %}
+                    </div>
+                    <div>
+                        <label for="avatar" class="btn btn-sm btn-secondary" style="cursor: pointer;">
+                            <i class="fas fa-camera" style="margin-right: 8px;"></i> 更换头像
+                        </label>
+                        <input type="file" id="avatar" name="avatar" style="display: none;" accept="image/*">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">用户名</label>
+                    <input type="text" name="username" class="form-input" value="{{ current_user.username }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">电子邮箱</label>
+                    <input type="email" name="email" class="form-input" value="{{ current_user.email }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">手机号码</label>
+                    <input type="tel" name="phone" class="form-input" value="{{ current_user.phone }}" required>
+                </div>
+                
+                <div class="d-flex gap-2" style="margin-top: 32px;">
+                    <a href="{{ url_for('user_profile') }}" class="btn btn-secondary" style="flex: 1;">取消</a>
+                    <button type="submit" class="btn btn-primary" style="flex: 1;">保存修改</button>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

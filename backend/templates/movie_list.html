@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+
+{% block title %}电影列表 - Lumina Cinema{% endblock %}
+
+{% block content %}
+    <div class="animate-fade-in">
+        <div style="text-align: center; margin-bottom: 48px; padding-top: 24px;">
+            <h1 style="font-size: 2.5rem; margin-bottom: 16px;">探索电影</h1>
+            <p style="color: var(--text-secondary);">发现最新的精彩大片</p>
+        </div>
+
+        <!-- Search & Filter -->
+        <div class="card mb-8" style="padding: 24px;">
+            <form method="GET" action="{{ url_for('movie_list') }}" style="display: flex; flex-direction: column; gap: 16px; md:flex-row;">
+                <div style="flex: 2; display: flex; gap: 12px;">
+                    <div style="position: relative; flex: 1;">
+                        <i class="fas fa-search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"></i>
+                        <input type="text" name="search" class="form-input" placeholder="搜索电影标题..." value="{{ search_query }}" style="padding-left: 48px;">
+                    </div>
+                </div>
+                
+                <div style="flex: 3; display: flex; gap: 12px; flex-wrap: wrap;">
+                    <select name="genre" class="form-input" style="flex: 1; min-width: 140px;">
+                        <option value="">全部类型</option>
+                        {% for genre in genres %}
+                            <option value="{{ genre }}" {% if genre_filter == genre %}selected{% endif %}>{{ genre }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <select name="year" class="form-input" style="flex: 1; min-width: 140px;">
+                        <option value="">全部年份</option>
+                        {% for year in years %}
+                            <option value="{{ year }}" {% if year_filter == year %}selected{% endif %}>{{ year }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                    <div style="display: flex; gap: 8px;">
+                        <button type="submit" class="btn btn-primary">筛选</button>
+                        <a href="{{ url_for('movie_list') }}" class="btn btn-secondary">重置</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Movie Grid -->
+        {% if movies %}
+            <div class="grid-container">
+                {% for movie in movies %}
+                    <a href="{{ url_for('movie_detail', movie_id=movie.movie_id) }}" class="movie-card">
+                        <div class="movie-poster-wrapper">
+                            <img src="{{ movie.poster if movie.poster else 'https://placehold.co/250x350?text=Movie+Poster' }}" alt="{{ movie.title }}" class="movie-poster" loading="lazy">
+                            <div class="movie-rating-badge">
+                                <i class="fas fa-star"></i> {{ movie.rating }}
+                            </div>
+                        </div>
+                        <div class="movie-card-content">
+                            <h3 class="movie-title">{{ movie.title }}</h3>
+                            <div class="movie-info">
+                                <span>{{ movie.genre }}</span>
+                                <span style="margin: 0 8px;">•</span>
+                                <span>{{ movie.duration }} 分钟</span>
+                            </div>
+                            <div style="margin-top: auto; display: flex; justify-content: space-between; align-items: center; font-size: 0.9rem; color: var(--text-secondary);">
+                                <span>{{ movie.release_date }}</span>
+                            </div>
+                        </div>
+                    </a>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="card" style="padding: 64px; text-align: center; color: var(--text-secondary);">
+                <i class="fas fa-film" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                <p style="font-size: 1.1rem;">未找到相关电影</p>
+                <a href="{{ url_for('movie_list') }}" class="btn btn-ghost" style="margin-top: 16px;">清除筛选条件</a>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}

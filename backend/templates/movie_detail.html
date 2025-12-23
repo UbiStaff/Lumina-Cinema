@@ -1,0 +1,178 @@
+{% extends "base.html" %}
+
+{% block title %}{{ movie.title }} - Lumina Cinema{% endblock %}
+
+{% block content %}
+<div style="position: relative; margin-top: -24px;">
+    <!-- Immersive Backdrop -->
+    <div style="position: relative; height: 50vh; min-height: 400px; margin: 0 -24px; overflow: hidden;">
+        <img src="{{ movie.poster if movie.poster else 'https://placehold.co/800x400?text=Movie+Poster' }}" 
+             style="width: 100%; height: 100%; object-fit: cover; filter: blur(20px) brightness(0.4); transform: scale(1.1);">
+        <div style="position: absolute; bottom: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to top, var(--bg-body) 0%, transparent 100%);"></div>
+    </div>
+
+    <!-- Movie Content -->
+    <div class="container" style="margin-top: -200px; position: relative; z-index: 10;">
+        <div style="display: flex; flex-direction: column; gap: 32px; md:flex-row;">
+            <!-- Top Section: Poster & Info -->
+            <div style="display: flex; gap: 32px; flex-wrap: wrap;">
+                <!-- Poster -->
+                <div class="animate-fade-in" style="width: 240px; flex-shrink: 0; border-radius: var(--radius-md); overflow: hidden; box-shadow: var(--shadow-lg);">
+                    <img src="{{ movie.poster if movie.poster else 'https://placehold.co/300x450?text=Movie+Poster' }}" 
+                         style="width: 100%; height: auto; display: block;">
+                </div>
+
+                <!-- Info -->
+                <div class="animate-fade-in delay-100" style="flex: 1; min-width: 300px; padding-top: 24px;">
+                    <h1 style="font-size: 3rem; line-height: 1.1; margin-bottom: 16px; text-shadow: 0 4px 12px rgba(0,0,0,0.5);">
+                        {{ movie.title }}
+                    </h1>
+                    
+                    <div style="display: flex; gap: 16px; margin-bottom: 24px; color: var(--text-secondary); font-size: 1.1rem;">
+                        <span>{{ movie.genre }}</span>
+                        <span>•</span>
+                        <span>{{ movie.duration }} 分钟</span>
+                        <span>•</span>
+                        <span>{{ movie.release_date }}</span>
+                    </div>
+
+                    <div style="display: flex; gap: 16px; margin-bottom: 32px;">
+                        <div style="display: flex; align-items: center; gap: 8px; background: rgba(255,255,255,0.1); padding: 8px 16px; border-radius: var(--radius-sm); backdrop-filter: blur(4px);">
+                            <i class="fas fa-star text-warning" style="font-size: 1.2rem;"></i>
+                            <span style="font-size: 1.2rem; font-weight: 700;">{{ movie.rating }}</span>
+                        </div>
+                        <button class="btn btn-secondary btn-icon"><i class="far fa-heart"></i></button>
+                        <button class="btn btn-secondary btn-icon"><i class="fas fa-share-alt"></i></button>
+                    </div>
+
+                    <div style="font-size: 1.1rem; line-height: 1.7; color: var(--text-secondary); margin-bottom: 32px; max-width: 700px;">
+                        {{ movie.description }}
+                    </div>
+                    
+                    <div style="color: var(--text-secondary);">
+                        <p><strong>导演：</strong> {{ movie.director }}</p>
+                        <p><strong>主演：</strong> {{ movie.actors }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Screenings Section -->
+            <div class="animate-fade-in delay-200" style="margin-top: 48px;">
+                <h2 style="margin-bottom: 24px;">选座购票</h2>
+                
+                {% if screenings_by_date %}
+                    <!-- Date Tabs -->
+                    <div style="display: flex; gap: 16px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 8px;">
+                        {% for item in screenings_by_date %}
+                            <button class="btn {% if loop.first %}btn-primary{% else %}btn-secondary{% endif %} tab-btn" 
+                                    onclick="switchTab('date-{{ loop.index }}', this)"
+                                    style="min-width: 100px;">
+                                {{ item.date.strftime('%m-%d') }}
+                            </button>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Sessions -->
+                    <div class="sessions-container">
+                        {% for item in screenings_by_date %}
+                            <div id="date-{{ loop.index }}" class="tab-content" style="display: {% if loop.first %}grid{% else %}none{% endif %}; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px;">
+                                {% for screening in item.screenings %}
+                                    <a href="{{ url_for('select_seats', screening_id=screening.screening_id) }}" 
+                                       class="card" 
+                                       style="display: flex; justify-content: space-between; align-items: center; padding: 20px; text-decoration: none; color: inherit;">
+                                        <div>
+                                            <div style="font-size: 1.5rem; font-weight: 700; margin-bottom: 4px;">{{ screening.start_time.strftime('%H:%M') }}</div>
+                                            <div style="color: var(--text-secondary); font-size: 0.9rem;">{{ screening.hall.name }}</div>
+                                        </div>
+                                        <div style="text-align: right;">
+                                            <div style="color: var(--primary-color); font-size: 1.2rem; font-weight: 700; margin-bottom: 4px;">¥{{ screening.price }}</div>
+                                            <div class="btn btn-sm btn-secondary">选座</div>
+                                        </div>
+                                    </a>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div class="card" style="padding: 40px; text-align: center; color: var(--text-secondary);">
+                        <i class="fas fa-calendar-times" style="font-size: 48px; margin-bottom: 16px; opacity: 0.5;"></i>
+                        <p>暂无排片场次</p>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Reviews Section -->
+            <div class="animate-fade-in delay-300" style="margin-top: 64px;">
+                <h2 style="margin-bottom: 24px;">观众热评</h2>
+                
+                {% if current_user.is_authenticated %}
+                    <div class="card mb-8" style="padding: 24px;">
+                        <form action="{{ url_for('add_review', movie_id=movie.movie_id) }}" method="POST">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <div class="form-group">
+                                <label class="form-label">评分</label>
+                                <div class="stars" style="display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px;">
+                                    <input type="radio" id="star5" name="rating" value="5" hidden required><label for="star5" style="font-size: 24px; cursor: pointer; color: var(--text-tertiary); transition: color 0.2s;">★</label>
+                                    <input type="radio" id="star4" name="rating" value="4" hidden required><label for="star4" style="font-size: 24px; cursor: pointer; color: var(--text-tertiary); transition: color 0.2s;">★</label>
+                                    <input type="radio" id="star3" name="rating" value="3" hidden required><label for="star3" style="font-size: 24px; cursor: pointer; color: var(--text-tertiary); transition: color 0.2s;">★</label>
+                                    <input type="radio" id="star2" name="rating" value="2" hidden required><label for="star2" style="font-size: 24px; cursor: pointer; color: var(--text-tertiary); transition: color 0.2s;">★</label>
+                                    <input type="radio" id="star1" name="rating" value="1" hidden required><label for="star1" style="font-size: 24px; cursor: pointer; color: var(--text-tertiary); transition: color 0.2s;">★</label>
+                                </div>
+                                <style>
+                                    .stars input:checked ~ label,
+                                    .stars label:hover,
+                                    .stars label:hover ~ label { color: var(--warning); }
+                                </style>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">你的评价</label>
+                                <textarea name="content" class="form-input" rows="3" placeholder="这部电影怎么样？..." style="resize: vertical;"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">发布评价</button>
+                        </form>
+                    </div>
+                {% endif %}
+
+                <div style="display: grid; gap: 24px;">
+                    {% for review in reviews %}
+                        <div class="card" style="padding: 24px;">
+                            <div class="d-flex justify-between items-center mb-4">
+                                <div class="d-flex items-center gap-2">
+                                    <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--bg-surface-hover); display: flex; align-items: center; justify-content: center; font-weight: 700;">
+                                        {{ review.user.username[0] | upper }}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600;">{{ review.user.username }}</div>
+                                        <div style="font-size: 0.85rem; color: var(--text-secondary);">{{ review.created_at.strftime('%Y-%m-%d') }}</div>
+                                    </div>
+                                </div>
+                                <div style="color: var(--warning);">
+                                    {% for i in range(review.rating) %}★{% endfor %}
+                                </div>
+                            </div>
+                            <p style="color: var(--text-secondary); line-height: 1.6;">{{ review.content }}</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function switchTab(contentId, btn) {
+        // Hide all content
+        document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+        // Show selected
+        document.getElementById(contentId).style.display = 'grid';
+        
+        // Update buttons
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.classList.remove('btn-primary');
+            el.classList.add('btn-secondary');
+        });
+        btn.classList.remove('btn-secondary');
+        btn.classList.add('btn-primary');
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,197 @@
+{% extends "base.html" %}
+
+{% block title %}选座 - {{ screening.movie.title }} - Lumina Cinema{% endblock %}
+
+{% block content %}
+    <div class="animate-fade-in" style="max-width: 1000px; margin: 0 auto;">
+        <!-- Header -->
+        <div style="margin-bottom: 48px; text-align: center;">
+            <h2 style="font-size: 2rem; margin-bottom: 8px;">{{ screening.movie.title }}</h2>
+            <div style="color: var(--text-secondary); display: flex; align-items: center; justify-content: center; gap: 16px;">
+                <span><i class="far fa-clock"></i> {{ screening.start_time.strftime('%m月%d日 %H:%M') }}</span>
+                <span>|</span>
+                <span><i class="fas fa-map-marker-alt"></i> {{ screening.hall.cinema.name }} - {{ screening.hall.name }}</span>
+            </div>
+        </div>
+
+        <div class="seat-selection-container" style="background: var(--bg-surface); padding: 48px 24px; border-radius: var(--radius-lg); border: 1px solid var(--border-color); box-shadow: var(--shadow-lg);">
+            <!-- Screen Area -->
+            <div class="theater-screen"></div>
+
+            <!-- Legend -->
+            <div class="d-flex justify-between" style="max-width: 400px; margin: 0 auto 48px;">
+                <div class="d-flex items-center gap-2">
+                    <div class="seat-legend available"></div>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">可选</span>
+                </div>
+                <div class="d-flex items-center gap-2">
+                    <div class="seat-legend selected"></div>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">已选</span>
+                </div>
+                <div class="d-flex items-center gap-2">
+                    <div class="seat-legend occupied"></div>
+                    <span style="color: var(--text-secondary); font-size: 0.9rem;">已售</span>
+                </div>
+            </div>
+
+            <!-- Seats Grid -->
+            <div class="seats-grid-wrapper" style="overflow-x: auto; padding-bottom: 24px;">
+                <div class="seats-grid" style="display: grid; grid-template-columns: repeat({{ hall.cols }}, 1fr); gap: 12px; min-width: 600px; width: fit-content; margin: 0 auto;">
+                    {% for seat in seats %}
+                        {% set is_occupied = seat.seat_id in booked_seat_ids %}
+                        {% set seat_label = seat.seat_row + "排" + seat.seat_col|string + "座" %}
+
+                        <div class="seat {% if is_occupied %}occupied{% endif %}" 
+                             data-id="{{ seat.seat_id }}"
+                             data-label="{{ seat_label }}"
+                             {% if is_occupied %}title="已售"{% else %}title="{{ seat_label }}"{% endif %}>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        
+        <!-- Selection Summary Bar -->
+        <div class="selection-bar animate-slide-up delay-200">
+            <div class="container d-flex justify-between items-center" style="height: 100%;">
+                <div class="d-flex flex-column justify-center">
+                    <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 4px;">已选座位</div>
+                    <div id="selected-seats-display" style="min-height: 24px; display: flex; gap: 8px;">
+                        <span style="color: var(--text-tertiary);">请选择座位</span>
+                    </div>
+                </div>
+
+                <div class="d-flex items-center gap-2">
+                    <div style="text-align: right; margin-right: 16px;">
+                        <div style="font-size: 0.9rem; color: var(--text-secondary);">总计</div>
+                        <div style="font-size: 1.5rem; font-weight: 700; color: var(--primary-color);">
+                            ¥<span id="total-price">0</span>
+                        </div>
+                    </div>
+                    
+                    <form id="booking-form" action="{{ url_for('create_order', screening_id=screening.screening_id) }}" method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <input type="hidden" name="seat_ids" id="selected_seats_input">
+                        <button type="submit" class="btn btn-primary btn-lg" id="submit-btn" disabled>
+                            确认购票
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block scripts %}
+    <style>
+        /* ... existing styles ... */
+        .seat {
+            width: 32px;
+            height: 32px;
+            background-color: #3f3f46;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .seat:not(.occupied):hover {
+            background-color: var(--primary-color);
+            transform: scale(1.1);
+            box-shadow: 0 0 10px rgba(255, 75, 31, 0.5);
+        }
+
+        .seat.selected {
+            background-color: var(--primary-color);
+            box-shadow: 0 0 15px rgba(255, 75, 31, 0.6);
+        }
+
+        .seat.occupied {
+            background-color: #27272a;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+
+        .seat-legend {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+        .seat-legend.available { background-color: #3f3f46; }
+        .seat-legend.selected { background-color: var(--primary-color); }
+        .seat-legend.occupied { background-color: #27272a; }
+
+        .selection-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 90px;
+            background: rgba(22, 22, 22, 0.95);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border-color);
+            z-index: 100;
+            padding: 0 24px;
+            box-shadow: 0 -10px 30px rgba(0,0,0,0.3);
+        }
+
+        /* Adjust footer margin to prevent overlap */
+        footer { margin-bottom: 90px; }
+    </style>
+
+    <script>
+        const pricePerSeat = {{ screening.price }};
+        const selectedSeats = new Map(); // Use Map to store seat_id -> label
+        const seats = document.querySelectorAll('.seat:not(.occupied)');
+        const selectedDisplay = document.getElementById('selected-seats-display');
+        const totalPriceDisplay = document.getElementById('total-price');
+        const seatsInput = document.getElementById('selected_seats_input');
+        const submitBtn = document.getElementById('submit-btn');
+
+        seats.forEach(seat => {
+            seat.addEventListener('click', () => {
+                seat.classList.toggle('selected');
+                const seatId = seat.dataset.id;
+                const seatLabel = seat.dataset.label;
+                
+                if (seat.classList.contains('selected')) {
+                    // Check max seats
+                    if (selectedSeats.size >= 6) {
+                        alert('一次最多选择6个座位');
+                        seat.classList.remove('selected');
+                        return;
+                    }
+                    selectedSeats.set(seatId, seatLabel);
+                } else {
+                    selectedSeats.delete(seatId);
+                }
+                
+                updateUI();
+            });
+        });
+
+        function updateUI() {
+            // Update Text Display
+            if (selectedSeats.size === 0) {
+                selectedDisplay.innerHTML = '<span style="color: var(--text-tertiary);">请选择座位</span>';
+                submitBtn.disabled = true;
+            } else {
+                const labels = Array.from(selectedSeats.values()).map(label => `
+                    <span class="tag" style="background: rgba(255, 75, 31, 0.1); border: 1px solid rgba(255, 75, 31, 0.3); color: var(--primary-color);">
+                        ${label}
+                    </span>
+                `).join('');
+                selectedDisplay.innerHTML = labels;
+                submitBtn.disabled = false;
+            }
+
+            // Update Price
+            totalPriceDisplay.textContent = selectedSeats.size * pricePerSeat;
+
+            // Update Hidden Input (comma separated string)
+            const seatsArray = Array.from(selectedSeats.keys());
+            seatsInput.value = seatsArray.join(',');
+        }
+    </script>
+{% endblock %}

@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+
+{% block title %}订单确认 - Lumina Cinema{% endblock %}
+
+{% block content %}
+    <div class="auth-wrapper animate-fade-in" style="min-height: auto; padding: 48px 0;">
+        <div class="auth-box" style="max-width: 600px;">
+            <div style="text-align: center; margin-bottom: 32px;">
+                <div style="width: 80px; height: 80px; border-radius: 50%; background: rgba(16, 185, 129, 0.1); color: var(--success); display: flex; align-items: center; justify-content: center; margin: 0 auto 24px; font-size: 2.5rem;">
+                    <i class="fas fa-check"></i>
+                </div>
+                <h1 style="font-size: 2rem; margin-bottom: 8px;">订单提交成功</h1>
+                <p style="color: var(--text-secondary);">请在 15 分钟内完成支付</p>
+            </div>
+            
+            <div style="background: var(--bg-body); padding: 24px; border-radius: var(--radius-md); margin-bottom: 32px;">
+                <div class="d-flex justify-between items-center mb-4">
+                    <span style="color: var(--text-secondary);">订单号</span>
+                    <span style="font-family: monospace;">#{{ order.order_id }}</span>
+                </div>
+                
+                <div style="border-bottom: 1px solid var(--border-color); margin-bottom: 16px; padding-bottom: 16px;">
+                    <h3 style="margin-bottom: 8px;">{{ order.screening.movie.title }}</h3>
+                    <div style="color: var(--text-secondary); font-size: 0.95rem;">
+                        {{ order.screening.start_time.strftime('%Y-%m-%d %H:%M') }}
+                        <br>
+                        {{ order.screening.hall.cinema.name }} - {{ order.screening.hall.name }}
+                    </div>
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 8px;">座位</div>
+                    <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                        {% for order_seat in order.order_seats %}
+                            <span class="tag">{{ order_seat.seat.seat_row }}排{{ order_seat.seat.seat_col }}座</span>
+                        {% endfor %}
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-between items-center" style="font-size: 1.2rem; font-weight: 700;">
+                    <span>总价</span>
+                    <span style="color: var(--primary-color);">¥{{ order.total_price }}</span>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 16px;">
+                <a href="{{ url_for('user_profile') }}" class="btn btn-secondary" style="flex: 1;">查看订单</a>
+                <form action="{{ url_for('pay_order', order_id=order.order_id) }}" method="POST" style="flex: 1;">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">立即支付</button>
+                </form>
+            </div>
+        </div>
+    </div>
+{% endblock %}
